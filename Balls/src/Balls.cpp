@@ -1,16 +1,31 @@
 #include "Application.hpp"
+#include "physics/Physics.hpp"
 
-#include <vector>
-#include <iostream>
 
-#define SIMULATION_WINDOW_WIDTH 800
-#define SIMULATION_WINDOW_HEIGHT 700
+constexpr uint16_t SIMULATION_WINDOW_WIDTH = 800;
+constexpr uint16_t SIMULATION_WINDOW_HEIGHT = 800;
 
-#define TIME_STEP 1.f / 60.f
+class BallsApp : public Application { 
+	PhysicsController* physics = 0;
 
-class BallsApp : protected Application {  };
+public:
+	BallsApp() : Application(1920, 1080) {}
+
+	virtual void onCreate() {
+		physics = new PhysicsController(SIMULATION_WINDOW_WIDTH, SIMULATION_WINDOW_HEIGHT);
+	}
+
+	void onDisplay() {
+		physics->displaySimulation();
+	}
+
+	void onUpdate(float deltaTime) {
+		physics->update(deltaTime);
+	}
+};
 
 int main() {
-    BallsApp* app = new BallsApp();
+    BallsApp app;
+	app.run();
 	return 0;
 }

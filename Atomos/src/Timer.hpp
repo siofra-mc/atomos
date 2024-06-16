@@ -10,10 +10,10 @@ class Timer {
 public:
 	Timer();
 	~Timer();
-	void start();
-	void stop();
-	float readSplitMillis();
-	float readmarkSplitMillis();
-	float readTime();
-	void markSplit();
+	void	start();
+	void	stop();
+	float	readSplitMillis();
+	float	readmarkSplitMillis();
+	float	readTime() const;
+	void	markSplit();
 };

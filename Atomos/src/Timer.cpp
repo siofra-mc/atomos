@@ -5,7 +5,7 @@ Timer::Timer() {
 }
 
 Timer::~Timer() {
-
+	stop();
 }
 
 void Timer::start() {
@@ -29,7 +29,7 @@ float Timer::readmarkSplitMillis()
 	return returnValue;
 }
 
-float Timer::readTime() {
+float Timer::readTime() const {
 	std::chrono::duration<float, std::milli> diff;
 	if (running) {
 		diff = std::chrono::steady_clock::now()- startTime;

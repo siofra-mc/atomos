@@ -10,32 +10,23 @@
 #include "Application.hpp"
 
 #include <vector>
+#include <sstream>
 #include <iostream>
 
 
-#define SIMULATION_WINDOW_WIDTH 800
-#define SIMULATION_WINDOW_HEIGHT 700
+constexpr int SIMULATION_WINDOW_WIDTH = 800;
+constexpr int SIMULATION_WINDOW_HEIGHT = 700;
 
-#define TIME_STEP 1.f / 60.f
-
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);	
-void processInput(GLFWwindow *window);
-
-// settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+constexpr float TIME_STEP = 1.f / 90.f;
 
 bool debug;
 Timer timer;
 float frames = 0.f;
-float deltaTime = 0.f;
 
-PhysicsController* physics; 
-
-Application::Application() {
-    init();
-    run();
+Application::Application(uint16_t width, uint16_t height) {
+	this->m_screenWidth = width;
+	this->m_screenHeight = height;
+	init();
 }
 
 Application::~Application() {
@@ -60,18 +51,18 @@ void Application::init() {
 
 	// glfw window creation
 	// --------------------
-	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-	if (window == NULL) {
+	m_window = glfwCreateWindow(m_screenWidth, m_screenHeight, "Atomos", NULL, NULL);
+	if (m_window == NULL) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		exit(1);
 	}
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(m_window);
 	//init glew after the context have been made
 	glewInit();
 
 
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetFramebufferSizeCallback(m_window, framebufferSizeCallback);
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -82,65 +73,59 @@ void Application::init() {
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
 
 	// Setup Platform/Renderer backends
-	ImGui_ImplGlfw_InitForOpenGL(window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+	ImGui_ImplGlfw_InitForOpenGL(m_window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init();
-	physics = new PhysicsController(SIMULATION_WINDOW_WIDTH, SIMULATION_WINDOW_HEIGHT);
 }
 
 void Application::run() {
+	onCreate();
+
 	timer.start();
-	printf("Window memory location: %x", window);
-    while (window) {
+	float deltaTime = 0.f;
+	while (m_window) {
 		glfwPollEvents();
-		processInput(window);
+		processInput(m_window);
 		
-		onDisplay();
+		onDisplayWrapper();
 		// TODO: meter updates
-		onUpdate();
+		deltaTime = timer.readSplitMillis() / 1000;
+		if (deltaTime >= TIME_STEP) {
+			timer.markSplit();
+
+			std::stringstream ss;
+			ss << "Atomos - " << deltaTime << "ms";
+			glfwSetWindowTitle(m_window, ss.str().c_str());
+
+			onUpdate(deltaTime);
+		}
     }
 }
 
-void Application::onDisplay() {
+void Application::onDisplayWrapper() {
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	// Start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
 
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+	onDisplay();
 
-		physics->displaySimulation();
-        
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		glfwSwapBuffers(window);
-}
-
-void Application::onUpdate()
-{
-    // render
-    // ------
-
-    deltaTime = timer.readmarkSplitMillis() / 1000;
-    frames = 1.f / deltaTime;
-    physics->update(deltaTime);
-
+	glfwSwapBuffers(m_window);
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+void Application::processInput(GLFWwindow *m_window) {
+    if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(m_window, true);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
+void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }

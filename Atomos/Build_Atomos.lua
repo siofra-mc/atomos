@@ -57,8 +57,8 @@ project "Atomos"
     --for x64 use these
     filter "architecture:x64"
         libdirs { 
-            "./lib/glfw-3.2.1/x64/lib",
-            "./lib/glew-2.0.0/x64/lib"
+            "./lib/glfw-3.2.1/win64/lib",
+            "./lib/glew-2.0.0/win64/lib"
         }
     filter { }
 

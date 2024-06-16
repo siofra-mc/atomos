@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm.hpp>
+#include <iostream>
 #include <stdint.h>
 #include <concepts>
 
@@ -13,17 +14,25 @@ concept Boundable = requires (T t) { t.minimumBound; t.maximumBound; };
 
 template <Boundable NodeType>
 class GridContainer {
+public:
+	// TODO: DO NOT KEEP AS PUBLIC
+	std::template vector<NodeType*> gridSquares; 
 protected:
 	static uint32_t nextID;
 	uint16_t width;
 	uint16_t height;
 	uint16_t nodeSize;
-	std::template vector<NodeType*> gridSquares; 
 
-	NodeType* getCell(int x, int y) { return gridSquares.at(y * width + x); }
+	NodeType* getCell(int x, int y) { 
+		if (x >= width || x < 0 || y >= height || y < 0) {
+			std::cerr << "Fuck bro, you outta bounds\n";
+			return 0;
+		}
+		return gridSquares.at(y * width + x); 
+	}
 	NodeType* getCell(glm::u16vec2 pos) { return getCell(pos.x, pos.y); };
-	NodeType* getCellFromPosition(float x, float y) { return gridSquares.at(floor(y / nodeSize) * width + floor(x / nodeSize)); }
-	NodeType* getCellFromPosition(glm::vec2 pos) { return getCellFromPosition(pos.x, pos.y); }
+	NodeType* getCellFromPosition(float x, float y) { return getCell((floor(x / nodeSize), floor(y / nodeSize))); }
+	NodeType* getCellFromPosition(glm::vec2 pos) { return getCell(floor(pos.x / nodeSize), floor(pos.y / nodeSize)); }
 public:
 	GridContainer(uint16_t m, uint16_t n, uint16_t size) {
 		width = m;
@@ -36,8 +45,8 @@ public:
 	}
 	~GridContainer() {	for (NodeType* v : gridSquares) delete v; }
 	glm::u16vec2 getGridIndex(glm::vec2 position) {
-		uint16_t x = floor(position.x / nodeSize);
-		uint16_t y = floor(position.y / nodeSize);
+		uint16_t x = uint16_t(floor(position.x / nodeSize));
+		uint16_t y = uint16_t(floor(position.y / nodeSize));
 		return glm::u16vec2(x, y);
 	}
 	template <Placeable NodeObject>bool insert(NodeObject* object) {

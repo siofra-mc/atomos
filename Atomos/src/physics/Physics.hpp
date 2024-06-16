@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <glm.hpp>
+#include "glm.hpp"
 #include <array>
 #include "ThreadPool.hpp"
 #include "GridContainer.hpp"
@@ -36,6 +36,7 @@ class PhysicsController {
 
 		PhysicsObject(PhysicsController* ctrlr,  glm::vec2 pos, float r, glm::vec2 v);
 		~PhysicsObject();
+		void nudge();
 		void accelerate(glm::vec2 acc);
 		void enforceBoundaries(uint16_t width, uint16_t height);
 		void update(float timeDelta, uint16_t simWidth, uint16_t simHeight);
@@ -54,8 +55,7 @@ class PhysicsController {
 		glm::u16vec2 minimumBound;
 		glm::u16vec2 maximumBound;
 
-		PhysicsObject* head = 0;
-		PhysicsObject* tail = 0;
+		std::list<PhysicsObject*> contents;
 #endif
 		CollisionNode(int x, int y, uint16_t size) { 
 			index = { x, y };  
@@ -63,7 +63,7 @@ class PhysicsController {
 			maximumBound = { (x + 1) * size, (y + 1) * size};
 		}
 		size_t count() const;
-		PhysicsObject* getObject(int8_t index);
+		PhysicsObject* getObject(int8_t index) const;
 		bool insert(PhysicsObject* obj);
 		bool remove(PhysicsObject* obj);
 		void clear();
@@ -71,7 +71,7 @@ class PhysicsController {
 
 
 	struct CollisionEvent {
-		enum CollisionType {ERROR, CELL_CHANGE, BOUNDARY_ENFORCEMENT, BALL_BALL};
+		enum CollisionType {ERROR, CELL_CHANGE, BOUNDARY_ENFORCEMENT, BALL_BALL, BALL_OVERLAP};
 		
 		CollisionType type;
 		float eventTime;
@@ -90,6 +90,7 @@ class PhysicsController {
 
 
 	class CollisionGrid : public GridContainer<CollisionNode> {
+		PhysicsController* controller;
 		CollisionQueue eventQueue;
 		
 	public:
@@ -97,7 +98,7 @@ class PhysicsController {
 		void checkCollision(PhysicsObject* obj1, PhysicsObject* obj2);
 		void checkCollisionToQueue(PhysicsObject* obj1, PhysicsObject* obj2);
 		void checkCellCollisions(CollisionNode* cell1, CollisionNode* cell2);
-		void handleCollisions(int widthLow, int widthHigh);
+	//	void handleCollisions(int widthLow, int widthHigh);
 		void handleCollisionsThreaded(ThreadPool* pool);
 		void addCollisionsToQueue(PhysicsObject* object, float dt);
 		void checkCollisionsQueue(float dt);
@@ -144,9 +145,6 @@ protected:
 	uint16_t simulationWidth;
 	uint16_t simulationHeight;
 	void addObject(PhysicsObject* obj);
-	
-	template <typename T>
-	friend class ObjectSpawner;
 
 
 public:

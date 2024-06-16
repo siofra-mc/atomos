@@ -16,7 +16,9 @@ project "Balls"
 
     includedirs {
         "src",
+        "%{wks.location}/Atomos/lib/glm",
         "%{wks.location}/Atomos/src"
+
     }
     
     --Debug and Release configurations
