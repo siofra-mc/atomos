@@ -1,4 +1,6 @@
 project "Balls"
+    print("Pre-building Balls...")
+
     kind "ConsoleApp"
     language "C++"
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
@@ -36,3 +38,4 @@ project "Balls"
         buildoptions { "-M" }
     filter { }
 
+    print("Balls pre-build completed!")

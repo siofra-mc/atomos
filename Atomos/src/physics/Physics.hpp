@@ -7,6 +7,9 @@
 
 constexpr float REFRACTORY_TIME = .115f;
 constexpr int MAX_COLLISION_NODE_OBJECTS = 16;
+constexpr int OBJECT_SIZE = 8;
+constexpr int CELL_SIZE = OBJECT_SIZE * 2;
+constexpr float ELASTICITY = .9f;
 
 #define USE_QUEUE
 
@@ -14,7 +17,7 @@ constexpr int MAX_COLLISION_NODE_OBJECTS = 16;
 class PhysicsController {
 	enum Direction {NONE = -1, UP, RIGHT, DOWN, LEFT };
 
-	inline static uint32_t nextID = 1;
+	inline static uint32_t nextID = 0;
 
 	struct PhysicsComponent {
 		PhysicsController* controller = 0;
@@ -42,9 +45,6 @@ class PhysicsController {
 		void update(float timeDelta, uint16_t simWidth, uint16_t simHeight);
 	};
 
-
-
-
 	struct CollisionNode {
 		uint8_t numObjects = 0;
 		glm::u16vec2 index;
@@ -69,7 +69,6 @@ class PhysicsController {
 		void clear();
 	};
 
-
 	struct CollisionEvent {
 		enum CollisionType {ERROR, CELL_CHANGE, BOUNDARY_ENFORCEMENT, BALL_BALL, BALL_OVERLAP};
 		
@@ -88,7 +87,6 @@ class PhysicsController {
 	};
 	typedef std::priority_queue<CollisionEvent> CollisionQueue;
 
-
 	class CollisionGrid : public GridContainer<CollisionNode> {
 		PhysicsController* controller;
 		CollisionQueue eventQueue;
@@ -96,7 +94,7 @@ class PhysicsController {
 	public:
 		CollisionGrid(uint16_t m, uint16_t n, PhysicsController* ctrlr);
 		void checkCollision(PhysicsObject* obj1, PhysicsObject* obj2);
-		void checkCollisionToQueue(PhysicsObject* obj1, PhysicsObject* obj2);
+		 int interpolateInitalIntersection(PhysicsObject* obj1, PhysicsObject* obj2);
 		void checkCellCollisions(CollisionNode* cell1, CollisionNode* cell2);
 	//	void handleCollisions(int widthLow, int widthHigh);
 		void handleCollisionsThreaded(ThreadPool* pool);

@@ -33,3 +33,9 @@ workspace "Atomos" -- Name of sln file
 
     group "Demo"
         include "Balls/Build_Balls.lua"
+
+    group { }
+
+    files {
+        premake5.lua
+    }

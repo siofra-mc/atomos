@@ -1,4 +1,6 @@
 project "ImGui"
+    print("Pre-building ImGui...")
+
     kind "StaticLib"
     language "C++"
     staticruntime "off"
@@ -19,3 +21,5 @@ project "ImGui"
         "backends/*_opengl3*",
         "Build_ImGui.lua"
     } 
+
+    print("ImGui pre-build completed!")

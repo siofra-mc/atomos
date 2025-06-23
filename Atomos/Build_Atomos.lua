@@ -1,8 +1,11 @@
 project "Atomos"
+    print("Pre-building Atomos...")
+
     kind "StaticLib"
     language "C++"
     cppdialect "C++20"
     staticruntime "off"
+
 
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 
@@ -45,8 +48,6 @@ project "Atomos"
 
     filter { }
 
-    print ("test")
-
 
     --for 32 bit use these library paths
     filter "architecture:x86"
@@ -65,3 +66,5 @@ project "Atomos"
     filter { "system:windows", "action:gmake2" }
         buildoptions { "-M" }
     filter { }
+
+    print("Atomos pre-build completed!")

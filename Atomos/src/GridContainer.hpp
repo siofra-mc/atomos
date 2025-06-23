@@ -7,7 +7,7 @@
 
 
 template <typename T>
-concept Placeable = requires (T t) { t.position; };
+concept Placeable = requires (T t) { t.position; t.id; };
 
 template<typename T>
 concept Boundable = requires (T t) { t.minimumBound; t.maximumBound; };
@@ -16,34 +16,38 @@ template <Boundable NodeType>
 class GridContainer {
 public:
 	// TODO: DO NOT KEEP AS PUBLIC
-	std::template vector<NodeType*> gridSquares; 
+	std::template vector<NodeType*> gridSquares;
 protected:
 	static uint32_t nextID;
 	uint16_t width;
 	uint16_t height;
 	uint16_t nodeSize;
+	std::unordered_map<uint32_t, NodeType*> cellsByObjectID;
 
-	NodeType* getCell(int x, int y) { 
+	NodeType* getCellFromObjectID(uint32_t objectID) {
+		return cellsByObjectID.at(objectID);
+	}
+	NodeType* getCellFromIndex(int x, int y) {
 		if (x >= width || x < 0 || y >= height || y < 0) {
-			std::cerr << "Fuck bro, you outta bounds\n";
+			std::cerr << "Fuck, bro, you outta bounds\n";
 			return 0;
 		}
-		return gridSquares.at(y * width + x); 
+		return gridSquares.at(y * width + x);
 	}
-	NodeType* getCell(glm::u16vec2 pos) { return getCell(pos.x, pos.y); };
-	NodeType* getCellFromPosition(float x, float y) { return getCell((floor(x / nodeSize), floor(y / nodeSize))); }
-	NodeType* getCellFromPosition(glm::vec2 pos) { return getCell(floor(pos.x / nodeSize), floor(pos.y / nodeSize)); }
+	NodeType* getCellFromIndex(glm::u16vec2 pos) { return getCellFromIndex(pos.x, pos.y); };
+	NodeType* getCellFromPosition(float x, float y) { return getCellFromIndex((floor(x / nodeSize), floor(y / nodeSize))); }
+	NodeType* getCellFromPosition(glm::vec2 pos) { return getCellFromIndex(floor(pos.x / nodeSize), floor(pos.y / nodeSize)); }
 public:
 	GridContainer(uint16_t m, uint16_t n, uint16_t size) {
 		width = m;
 		height = n;
 		nodeSize = size;
-		
+
 		for (int i = 0; i < m * n; i++) {
 			gridSquares.push_back(new NodeType(i % width, i / width, size));
 		}
 	}
-	~GridContainer() {	for (NodeType* v : gridSquares) delete v; }
+	~GridContainer() { for (NodeType* v : gridSquares) delete v; }
 	glm::u16vec2 getGridIndex(glm::vec2 position) {
 		uint16_t x = uint16_t(floor(position.x / nodeSize));
 		uint16_t y = uint16_t(floor(position.y / nodeSize));
@@ -52,9 +56,17 @@ public:
 	template <Placeable NodeObject>bool insert(NodeObject* object) {
 		glm::u16vec2 gridIndex = getGridIndex(object->position);
 		if (gridIndex.x < 0 || gridIndex.x >= width || gridIndex.y < 0 || gridIndex.y >= height) return 0;
-		
-		assert(getCell(gridIndex)->insert(object));
+
+		assert(getCellFromIndex(gridIndex)->insert(object));
+		cellsByObjectID[object->id] = getCellFromIndex(gridIndex);
 		return 1;
+	}
+	template <Placeable NodeObject>void remove(NodeObject* object) {
+		NodeType* containingCell = getCellFromObjectID(object->id);
+		assert(containingCell);
+		containingCell->remove(object);
+		
+		cellsByObjectID[object->id] = 0;
 	}
 	void clear() { for (NodeType* v : gridSquares) v->clear(); }
 };
